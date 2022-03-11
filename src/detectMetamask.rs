@@ -8,7 +8,9 @@ use web_sys::{
 use js_sys::{Error, Reflect, Boolean, JsString,
     Object, Promise, Function, Array, Proxy
 };
-/*methods:
+
+/*
+methods:
     'eth_requestAccounts' : request permission for connect user metamask
     'eth_accounts' : get list of account pub
 
@@ -19,10 +21,10 @@ use js_sys::{Error, Reflect, Boolean, JsString,
 pub struct WalletApi {
     pub loaded : bool,
     target : Option<JsValue>,
-    isMetaMask: Boolean,
+    pub isMetaMask: Boolean,
     currentAccount: Option<JsValue>,
-    isConnectedFn: Option<Function>,
-    requestFn : Option<Function>,
+    pub isConnectedFn: Option<Function>,
+    pub requestFn : Option<Function>,
     onFn : Option<Function>
 }
 
@@ -85,34 +87,36 @@ impl WalletApi {
 
         if let Ok(connected) = self.isConnected() {
             if connected.as_bool().unwrap() {
-                Ok(Reflect::apply(&self.requestFn.as_ref().unwrap(), method, params)?)
+                Ok(Reflect::apply(self.requestFn.as_ref().unwrap(), method, params)?)
             } else {
                 return Err("".into())
             }
             // if (connected)
             // Reflect::apply(self.requestFn, method, params)?
         } else { // else if let
-            Err(JsValue::from_str(&"got errors"))
+            Err("got errors".into())
         }
     }
 
     pub fn isConnected(&self) -> Result<JsValue, JsValue> {
         if self.loaded {
-            Ok(Reflect::apply(&self.isConnectedFn.as_ref().unwrap(), &"isConnected".into(), &Array::new())?)
+            let result = Reflect::apply(self.isConnectedFn.as_ref().unwrap(), &JsValue::UNDEFINED, &Array::new());
+            result
         } else {
             Err("not loaded".into())
         }
     }
 
-    pub async fn connect(& mut self) //-> Result<Promise, JsValue> {
+    pub async fn connect(&mut self) //-> Result<Promise, JsValue> {
         {
         // console::log_1(Reflect::apply(&self.isConnectedFn.as_ref().unwrap(), &"eth_requestAccounts".into(), &Array::new()).as_ref().unwrap());
+        console::log_1(&"connecting".into());
         match self.request(&"eth_requestAccounts".into(), &Array::new()) {
             Ok(value) => {
                 console::log_1(&value);
                 let promise = Promise::resolve(&value);
-                let output = JsFuture::from(promise).await;
-                match output {
+                // let output = 
+                match JsFuture::from(promise).await {
                     Ok(accounts) => {
                         console::log_1(&accounts);
                     },
@@ -165,6 +169,8 @@ impl WalletApi {
 extern "C" {
     // #[wasm_bindgen(ethereum)]
     // fn request();
+    // #[wasm_bindgen(window, ethereum)]
+    // fn isConnected() -> bool;
 
     // JsValue.UNDEFINED
 

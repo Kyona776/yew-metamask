@@ -1,7 +1,9 @@
 #![cfg_attr(debug_assertions, allow(dead_code, unused_imports))]
 
+use wasm_bindgen::prelude::*;
 use yew::prelude::{Component, Context, html, Html};
 use web_sys::{console};
+use js_sys::{Function};
 
 // mod layouts;
 // use layouts::{footer, header};
@@ -47,13 +49,27 @@ impl Component for App {
         match msg {
             Msg::AddOne => {
                 self.value += 1;
+                console::log_1(&self.ethApi.loaded.into());
+                match &self.ethApi.isConnectedFn {
+                    Some(func) => console::log_1(&JsValue::from(func)),
+                    None => console::log_1(&"undefined".into())
+                }
+                // println!("{}", self.ethApi);
                 // the value has changed so we need to
                 // re-render for it to appear on the page
                 true
             },
             Msg::ConnectEth => {
-                check_provider();
-                self.ethApi.connect();
+                // check_provider();
+                // console::log_1(self.ethApi.requestFn.as_ref().unwrap());
+                // self.ethApi.connect();
+                console::log_1(&self.ethApi.isMetaMask);
+                match self.ethApi.isConnected() {
+                    Ok(result) => console::log_1(&result),
+                    Err(error) => console::log_2(&"error isConnected \n".into(), &error)
+                };
+                // console::log_1(&connected);
+                // console::log_1(&JsValue::from_bool(isConnected()));
                 true
             }
         }
